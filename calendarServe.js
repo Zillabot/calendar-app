@@ -1,39 +1,64 @@
-var CalendarModel = Backbone.Model.extend({
-    defaults : {"value" : ""}
+var Day = Backbone.Model.extend({
+    defaults : {"event" : ""},
+    addEvent : function(str) {
+      this.set("event", str);
+      this.save();
+    }
 });
 
-var CalendarCollection = Backbone.Collection.extend({
-   model : CalendarModel
-});
-
-var coll = new CalendarCollection([{value : 3},{value : 8},{value : 7}]);
-
-var GridView = Backbone.View.extend({
-    render: function () {
-        for (var i = 0; i < 31; i++) {
-            this.views[i].render();
-        }
+var DayView = Backbone.View.extend({
+  listOpt : function() {
+    var select = '<select id="dayOpt" name="day"></select>';
+    $('#addEvent').append(select);
+    for(var i = 1; i < 32; i++) {
+      var option = document.createElement('option');
+      option.text = option.value = i;
+      $("#dayOpt").append(option);
+    }
+  },
+    render: function() {
+      var evt = this.model.get("event");
+      var text = '<input type="text" placeholder="Type here..." name="input"></input>'
+      var btn = '<button type="submit" id="1">Add Event</button>';
+      this.listOpt();
+      this.$el.html(text + btn + '<p>Event Day: '+evt+'</p>');
     },
-    initialize: function () {
-        this.views = [];
-        for (var counter = 0; counter < 31; counter++) {
-            var view = new CellView({model : this.collection.models[counter]});
-            this.$el.append(view.el);
-            this.views.push(view);
-        };
-        this.render();
+    printCal : function(cal) {
+  	var table = document.createElement('table');
+  	var td;
+  	for(var i = 0; i<35; i++) {
+  		if(i%7===0) {
+  			tr = document.createElement('tr');
+  			table.appendChild(tr);
+  		}
+  		td = document.createElement('td');
+  		td.innerHTML = '___';
+  		tr.appendChild(td);
+	   }
+	    document.body.appendChild(table);
     }
-});
-
-var CellView = Backbone.View.extend({
-    render: function () {
-        var myCounter = this.model.get("value");
-        this.$el.html("<div>" + myCounter + "</div>");
-    }
-});
+})
 
 $(document).ready(function() {
-    var grid = new GridView({collection : coll});
-    $("#caldiv").append(grid.$el);
-    console.log("Working");
+
+  var dayModel = new Day();
+
+  var dayView = new DayView({model:dayModel});
+  dayView.render();
+  dayView.printCal();
+
+  dayModel.on('change', function() {
+    dayView.render();
+    dayView.printCal();
+  });
+
+  // dayView.$el.on("click","#1", function () {
+  //     var mod = dayView.model;
+  //     var evt = mod.get("event");
+  //     var input = $('input')[0].value;
+  //     mod.set("event",input);
+  // });
+
+  $("#addEvent").append(dayView.$el);
+
 });
